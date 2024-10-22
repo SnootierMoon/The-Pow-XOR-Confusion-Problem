@@ -28,8 +28,8 @@ class Script:
             os.makedirs("data", exist_ok=True)
 
         system(cmd)
-        print()
         for n in range(0, M + 1):
+            print(f"--- Reference Implementation n={n} ---")
             self.py_runs[n] = pandas.DataFrame(pow_xor_confuse(n), columns=["a", "b"])
         for n in range(0, N + 1):
             cmd = ["./pow_xor_confuse", "-n", str(n)]

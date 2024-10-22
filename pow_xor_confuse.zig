@@ -114,26 +114,26 @@ pub fn main() !u8 {
 
     pow_xor_confuse_even_a(results[num_odd_a..], n);
     if (j != 0) {
-        const ws = try gpa.alignedAlloc(Worker, 64, @as(usize, 1) << j);
+        const ws = try gpa.alloc(Worker, @as(usize, 1) << j);
         defer gpa.free(ws);
-        @memset(ws, .{ .t = undefined, .p = .{ .c = 0, .vc = 0, .vp = 0  } });
 
         const num_per_w = num_odd_a >> j;
         for (ws, 0..) |*w, ji| {
+            w.p = .{ .c = 0, .vc = 0, .vp = 0 };
             w.t = try std.Thread.spawn(.{}, pow_xor_confuse_odd_a, .{ true, results[num_per_w * ji ..][0..num_per_w], n, &w.p, j, @as(u32, @intCast(ji)), false });
         }
         if (v) {
             var p: Prog = .{ .c = 0, .vc = 0, .vp = 0 };
-            while (p.c != num_odd_a) {
-                std.Thread.sleep(50 * std.time.ms_per_s);
-                p.c = 0;
+            while (p.c != num_per_w) {
+                std.Thread.sleep(1_000_000);
+                p.c = std.math.maxInt(usize);
                 for (ws) |*w| {
-                    p.c += @atomicLoad(usize, &w.p.c, .monotonic);
+                    p.c = @min(p.c, @atomicLoad(usize, &w.p.c, .monotonic));
                 }
-                p.update(n);
+                p.update(@ctz(num_per_w) + 1);
             }
         }
-        for (ws) |w| {
+        for (ws) |*w| {
             w.t.join();
         }
     } else {
