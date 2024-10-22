@@ -114,7 +114,7 @@ pub fn main() !u8 {
 
     pow_xor_confuse_even_a(results[num_odd_a..], n);
     if (j != 0) {
-        const ws: []Worker = try gpa.alignedAlloc(Worker, 64, @as(usize, 1) << j);
+        const ws = try gpa.alignedAlloc(Worker, 64, @as(usize, 1) << j);
         defer gpa.free(ws);
         @memset(ws, .{ .t = undefined, .p = .{ .c = 0, .vc = 0, .vp = 0  } });
 

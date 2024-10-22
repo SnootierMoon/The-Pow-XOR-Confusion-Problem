@@ -25,7 +25,7 @@ class Script:
         if valgrind:
             cmd.append("-fvalgrind")
         if w:
-            os.makedirs("data")
+            os.makedirs("data", exist_ok=True)
 
         system(cmd)
         print()
@@ -42,29 +42,13 @@ class Script:
             if w:
                 cmd.extend(["-o", f"data/pow-xor-confuse.{n}.csv"])
                 system(cmd)
-                self.zig_runs[n] = (pandas.read_csv(f"data/pow-xor-confuse.{n}.csv"), [], [])
+                self.zig_runs[n] = pandas.read_csv(f"data/pow-xor-confuse.{n}.csv")
             else:
                 r = system(cmd, text=True, stdout=subprocess.PIPE)
-                self.zig_runs[n] = (pandas.read_csv(StringIO(r.stdout)), [], [])
+                self.zig_runs[n] = pandas.read_csv(StringIO(r.stdout))
     
-    def count_exceptions(self):
-        for n, (df, a_counts, b_counts) in enumerate(self.zig_runs):
-            a_counts = df["a"].value_counts()
-            for a in range(1 << n):
-                if (count := a_counts.get(a, 0)) != 1:
-                    if count == 0:
-                        self.zig_runs[n][1].append(a)
-                    elif count == 2:
-                        self.zig_runs[n][2].append(a)
-                    else:
-                        print(f"  NEW EXCEPTION: a={a}, freq={count or 0}")
-            b_counts = df["b"].value_counts()
-            for b in range(1 << n):
-                if (count := b_counts.get(b, 0)) != (1 if b == 0 else 0 if b % 2 == 1 else 2):
-                    print(f"  NEW EXCEPTION: b={b}, freq={count or 0}")
-
-    def test_correctness(self):
-        for n, (df_py, (df_zig, _, _)) in enumerate(zip(self.py_runs, self.zig_runs)):
+    def correctness(self):
+        for n, (df_py, df_zig) in enumerate(zip(self.py_runs, self.zig_runs)):
             print(f"Checking {n}...")
             df_py_sorted = df_py.sort_values(by=["a","b"])
             df_py_sorted = df_py_sorted.reset_index(drop=True)
@@ -73,16 +57,32 @@ class Script:
             pandas.testing.assert_frame_equal(df_py_sorted, df_zig_sorted)
         print("All checks passed!")
 
-    def print_table(self):
+    def exceptions(self):
+        a0_counts = [[] for _ in range(len(self.zig_runs))]
+        a1_counts = [[] for _ in range(len(self.zig_runs))]
+        for n, (a0, a1, df) in enumerate(zip(a0_counts, a1_counts, self.zig_runs)):
+            a_counts = df["a"].value_counts()
+            for a in range(1 << n):
+                if (count := a_counts.get(a, 0)) != 1:
+                    if count == 0:
+                        a0.append(a)
+                    elif count == 2:
+                        a1.append(a)
+                    else:
+                        print(f"  NEW EXCEPTION: a={a}, freq={count or 0}")
+            b_counts = df["b"].value_counts()
+            for b in range(1 << n):
+                if (count := b_counts.get(b, 0)) != (1 if b == 0 else 0 if b % 2 == 1 else 2):
+                    print(f"  NEW EXCEPTION: b={b}, freq={count or 0}")
         H0 = "$n$"
         H1 = "values $a$ with no appearances"
         H2 = "values $a$ with 2 appearances"
         W0 = max(len(H0), len(str(len(self.zig_runs) - 1)))
-        W1 = max(len(H1), len(comma_sep(self.zig_runs[-1][1])))
-        W2 = max(len(H2), len(comma_sep(self.zig_runs[-1][2])))
+        W1 = max(len(H1), len(comma_sep(a0_counts[-1])))
+        W2 = max(len(H2), len(comma_sep(a1_counts[-1])))
         print(f"| {H0:<{W0}} | {H1:<{W1}} | {H2:<{W2}} |")
-        for n, (_, zero_as, two_as) in enumerate(self.zig_runs):
-            print(f"| {n:<{W0}} | {comma_sep(zero_as):<{W1}} | {comma_sep(two_as):<{W2}} |")
+        for n, (a0, a1) in enumerate(zip(a0_counts, a1_counts)):
+            print(f"| {n:<{W0}} | {comma_sep(a0):<{W1}} | {comma_sep(a1):<{W2}} |")
 
 if __name__ == "__main__":
     
@@ -108,6 +108,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     s = Script(N=args.n, M=args.m, j=args.j, v=args.v, w=args.w, O=args.O, tsan=args.tsan, valgrind=args.valgrind)
-    s.test_correctness()
-    s.count_exceptions()
-    s.print_table()
+    s.correctness()
+    s.exceptions()
