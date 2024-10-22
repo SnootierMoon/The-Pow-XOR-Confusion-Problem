@@ -1,8 +1,10 @@
 from io import StringIO
 from pow_xor_confuse import pow_xor_confuse
+import argparse
+import multiprocessing
+import os
 import pandas
 import subprocess
-import multiprocessing
 
 def system(l, **kwargs):
     print(f">>> {" ".join(l)}")
@@ -11,17 +13,39 @@ def comma_sep(s):
     return ", ".join(map(str,s))
 
 class Script:
-    def __init__(self, N, N_ref):
+    def __init__(self, N, M, j, v, w, O=False, tsan=False, valgrind=False):
         self.zig_runs = [None for _ in range(N + 1)]
-        self.py_runs = [None for _ in range(N_ref + 1)]
+        self.py_runs = [None for _ in range(M + 1)]
 
-        system(["zig", "build-exe", "pow_xor_confuse.zig", "-OReleaseFast"])
+        cmd = ["zig", "build-exe", "pow_xor_confuse.zig"]
+        if O:
+            cmd.append("-OReleaseFast")
+        if tsan:
+            cmd.append("-fsanitize-thread")
+        if valgrind:
+            cmd.append("-fvalgrind")
+        if w:
+            os.makedirs("data")
+
+        system(cmd)
         print()
-        for n in range(0, N_ref + 1):
+        for n in range(0, M + 1):
             self.py_runs[n] = pandas.DataFrame(pow_xor_confuse(n), columns=["a", "b"])
         for n in range(0, N + 1):
-            r = system(["./pow_xor_confuse", "-n", str(n), "-o", f"pow-xor-confuse.{n}.csv"], text=True, capture_output=True)
-            self.zig_runs[n] = (pandas.read_csv(f"pow-xor-confuse.{n}.csv"), [], [])
+            cmd = ["./pow_xor_confuse", "-n", str(n)]
+            if valgrind:
+                cmd.insert(0, "valgrind")
+            if v:
+                cmd.append("-v")
+            if j != None:
+                cmd.extend(["-j", str(j)])
+            if w:
+                cmd.extend(["-o", f"data/pow-xor-confuse.{n}.csv"])
+                system(cmd)
+                self.zig_runs[n] = (pandas.read_csv(f"data/pow-xor-confuse.{n}.csv"), [], [])
+            else:
+                r = system(cmd, text=True, stdout=subprocess.PIPE)
+                self.zig_runs[n] = (pandas.read_csv(StringIO(r.stdout)), [], [])
     
     def count_exceptions(self):
         for n, (df, a_counts, b_counts) in enumerate(self.zig_runs):
@@ -47,6 +71,7 @@ class Script:
             df_zig_sorted = df_zig.sort_values(by=["a","b"])
             df_zig_sorted = df_zig_sorted.reset_index(drop=True)
             pandas.testing.assert_frame_equal(df_py_sorted, df_zig_sorted)
+        print("All checks passed!")
 
     def print_table(self):
         H0 = "$n$"
@@ -60,7 +85,29 @@ class Script:
             print(f"| {n:<{W0}} | {comma_sep(zero_as):<{W1}} | {comma_sep(two_as):<{W2}} |")
 
 if __name__ == "__main__":
-    s = Script(20, 10)
+    
+    parser = argparse.ArgumentParser(description="Run implementations with various options.")
+    parser.add_argument("-n", type=int, metavar="NITER", 
+                        help="Run fast implementation on NITER different moduli from 1 to 2^NITER",
+                        required=True)
+    parser.add_argument("-m", type=int, metavar="NITER", 
+                        help="Run reference implementation on NITER different moduli from 1 to 2^NITER",
+                        required=True)
+    parser.add_argument("-j", type=int, metavar="NTHREADS", 
+                        help="Run on NTHREADS threads")
+    parser.add_argument("-v", action="store_true", 
+                        help="Enable progress tracking (requires stderr to be a tty)")
+    parser.add_argument("-w", action="store_true", 
+                        help="Save output of fast implementation to files")
+    parser.add_argument("-O", action="store_true", 
+                        help="Enable optimizations in fast implementation")
+    parser.add_argument("--tsan", action="store_true", 
+                        help="Enable thread sanitization")
+    parser.add_argument("--valgrind", action="store_true", 
+                        help="Enable sanitization with valgrind")
+
+    args = parser.parse_args()
+    s = Script(N=args.n, M=args.m, j=args.j, v=args.v, w=args.w, O=args.O, tsan=args.tsan, valgrind=args.valgrind)
     s.test_correctness()
     s.count_exceptions()
     s.print_table()

@@ -1,13 +1,47 @@
 const std = @import("std");
 
-const Result = struct {
+const Result = extern struct {
     a: u32,
     b: u32,
 };
 
+const Prog = struct {
+    c: usize,
+    vc: usize,
+    vp: usize,
+
+    inline fn prog1(p: *Prog, comptime mt: bool) usize {
+        if (mt) {
+            return @atomicRmw(usize, &p.c, .Add, 1, .monotonic);
+        } else {
+            defer p.c += 1;
+            return p.c;
+        }
+    }
+
+    inline fn update(p: *Prog, n: usize) void {
+        if (p.c > p.vc) {
+            std.io.getStdErr().writer().print("[{}/100]\r", .{p.vp}) catch {};
+            p.vp += 1;
+            p.vc = fraction(@as(usize, 1) << @intCast(n - 1), p.vp);
+        }
+    }
+
+    inline fn fraction(n: usize, p: usize) usize {
+        if (n > std.math.maxInt(usize) / 100) {
+            return p * (n / 100);
+        } else {
+            return (p * n) / 100;
+        }
+    }
+};
+
+const Worker = struct {
+    t: std.Thread,
+    p: Prog,
+};
+
 pub fn main() !u8 {
-    const out = std.io.getStdOut();
-    const err = std.io.getStdErr();
     var gpa_instance: std.heap.GeneralPurposeAllocator(.{}) = .init;
     defer std.debug.assert(gpa_instance.deinit() == .ok);
     const gpa = gpa_instance.allocator();
@@ -16,7 +50,7 @@ pub fn main() !u8 {
         var n: u8 = 16;
         var o: ?[]const u8 = null;
         var v = false;
-        var j: u16 = 1;
+        var j: u4 = 0;
         var args: std.process.ArgIterator = try .initWithAllocator(gpa);
 
         if (!args.skip()) {
@@ -24,34 +58,30 @@ pub fn main() !u8 {
         }
         while (args.next()) |opt| {
             if (std.mem.eql(u8, opt, "-j")) {
-                j = std.fmt.parseUnsigned(u16, args.next() orelse break :args null, 10) catch
-                    break :args null;
-                if (@popCount(j) != 1) {
+                const j_str = if (opt.len > 2) opt[2..] else args.next() orelse break :args null;
+                const j_val = std.fmt.parseUnsigned(u16, j_str, 10) catch break :args null;
+                if (@popCount(j_val) != 1) {
                     break :args null;
                 }
-                try err.writeAll("warning: -j not supported yet\n");
+                j = @intCast(@ctz(j_val));
             } else if (std.mem.eql(u8, opt, "-n")) {
-                n = std.fmt.parseUnsigned(u8, args.next() orelse break :args null, 10) catch
-                    break :args null;
+                const n_str = if (opt.len > 2) opt[2..] else args.next() orelse break :args null;
+                n = std.fmt.parseUnsigned(u8, n_str, 10) catch break :args null;
                 if (n > 32) {
                     break :args null;
                 }
-            } else if (std.mem.eql(u8, opt, "-o")) {
-                o = args.next() orelse break :args null;
+            } else if (std.mem.startsWith(u8, opt, "-o")) {
+                o = if (opt.len > 2) opt[2..] else args.next() orelse break :args null;
             } else if (std.mem.eql(u8, opt, "-v")) {
                 v = true;
-                try err.writeAll("warning: -v not supported yet\n");
             } else {
                 break :args null;
             }
         }
-        if (j != 1 and v) {
-            break :args null;
-        }
-        break :args .{ j, n, o, v };
+        break :args .{ @min(j, n -| 4), n, o, v };
     } orelse {
-        try err.writeAll(
-            \\Usage: pow_xor_confuse -n <0...32> [-j nthreads] [-o file] [-v]
+        try std.io.getStdErr().writeAll(
+            \\Usage: pow_xor_confuse -n <0...32> [-j <nthreads>] [-o <file.csv>] [-v]
             \\
             \\  Find all integer solutions (a, b) to the system
             \\    0 <= a < 2^n
@@ -60,26 +90,56 @@ pub fn main() !u8 {
             \\  where '^' denotes exponentiation.
             \\
             \\Options:
-            \\ -n <0...32>   Change the modulus to compute under. Required.
-            \\ -j nthreads   Number of threads to run on. Must be a power of 2.
-            \\ -o file.csv   Write to file.csv instead of to stdout.
-            \\ -v            Enable progress tracking (needs isatty stderr and -j not set).
-            \\ -h            Print this message.
+            \\ -n <0...32>     Change the modulus to compute under. Required.
+            \\ -j <nthreads>   Run on <nthreads> threads. Must be a power of 2 less than 65536.
+            \\ -o <file.csv>   Write to <file.csv> instead of to stdout.
+            \\ -v              Enable progress tracking (needs isatty stderr).
+            \\ -h              Print this message.
             \\
         );
         return 1;
     };
 
-    _ = j; // TODO: implement
-    _ = v; // TODO: implement
-
-    const results, const is_alloc = try pow_xor_confuse(gpa, n);
-    defer if (is_alloc) gpa.free(results);
-
     const out_file = if (o) |filename| try std.fs.cwd().createFile(filename, .{}) else null;
     defer if (out_file) |file| file.close();
-    var bw = std.io.bufferedWriter(if (out_file) |file| file.writer() else out.writer());
+    var bw = std.io.bufferedWriter(if (out_file) |file| file.writer() else std.io.getStdOut().writer());
     var writer = bw.writer();
+
+    const m = if (n == 32) std.math.maxInt(u32) else (@as(u32, 1) << @intCast(n)) - 1;
+    const num_odd_a = if (n == 0) 0 else @as(u32, 1) << @intCast(n - 1);
+
+    const results = try gpa.alloc(Result, if (n == 0) 1 else m);
+    defer gpa.free(results);
+
+
+    pow_xor_confuse_even_a(results[num_odd_a..], n);
+    if (j != 0) {
+        const ws: []Worker = try gpa.alignedAlloc(Worker, 64, @as(usize, 1) << j);
+        defer gpa.free(ws);
+        @memset(ws, .{ .t = undefined, .p = .{ .c = 0, .vc = 0, .vp = 0  } });
+
+        const num_per_w = num_odd_a >> j;
+        for (ws, 0..) |*w, ji| {
+            w.t = try std.Thread.spawn(.{}, pow_xor_confuse_odd_a, .{ true, results[num_per_w * ji ..][0..num_per_w], n, &w.p, j, @as(u32, @intCast(ji)), false });
+        }
+        if (v) {
+            var p: Prog = .{ .c = 0, .vc = 0, .vp = 0 };
+            while (p.c != num_odd_a) {
+                std.Thread.sleep(50 * std.time.ms_per_s);
+                p.c = 0;
+                for (ws) |*w| {
+                    p.c += @atomicLoad(usize, &w.p.c, .monotonic);
+                }
+                p.update(n);
+            }
+        }
+        for (ws) |w| {
+            w.t.join();
+        }
+    } else {
+        var p: Prog = .{ .c = 0, .vc = 0, .vp = 0 };
+        pow_xor_confuse_odd_a(false, results[0..num_odd_a], n, &p, 0, 0, v);
+    }
 
     try writer.writeAll("a,b\n");
     for (results) |result| {
@@ -90,33 +150,26 @@ pub fn main() !u8 {
     return 0;
 }
 
-fn pow_xor_confuse(gpa: std.mem.Allocator, n: u32) !struct { []const Result, bool } {
+fn pow_xor_confuse_even_a(r: []Result, n: u32) void {
     if (n == 0) {
-        return .{ &.{.{ .a = 0, .b = 0 }}, false };
-    } else if (n == 1) {
-        return .{ &.{.{ .a = 1, .b = 0 }}, false };
-    } else if (n == 2) {
-        return .{ &.{ .{ .a = 1, .b = 0 }, .{ .a = 2, .b = 2 }, .{ .a = 3, .b = 2 } }, false };
-    } else if (n == 3) {
-        return .{ &.{
-            .{ .a = 1, .b = 0 }, .{ .a = 3, .b = 2 },
-            .{ .a = 4, .b = 4 }, .{ .a = 5, .b = 4 },
-            .{ .a = 6, .b = 2 }, .{ .a = 6, .b = 6 },
-            .{ .a = 7, .b = 6 },
-        }, false };
+        @memcpy(r, &[_]Result{.{ .a = 0, .b = 0 }});
+        return;
+    } 
+    if (n == 1) {
+        return;
+    } 
+    if (n == 2) {
+        @memcpy(r, &[_]Result{ .{ .a = 2, .b = 2 } });
+        return;
+    } 
+    if (n == 3) {
+        @memcpy(r, &[_]Result{ .{ .a = 4, .b = 4 }, .{ .a = 6, .b = 2 }, .{ .a = 6, .b = 6 } });
+        return;
     }
-
+    var c: usize = 0;
     const m = if (n == 0) std.math.maxInt(u32) else (@as(u32, 1) << @intCast(n)) - 1;
     const ms: @Vector(4, u32) = @splat(m);
     const ns: @Vector(4, u32) = @splat(n);
-
-    var r: []Result = try gpa.alloc(Result, m);
-    errdefer gpa.free(r);
-    var c: usize = 0;
-
-    r[0] = .{ .a = 1, .b = 0 };
-    c += 1;
-
     var as: @Vector(4, u32) = .{ 0, 2, 4, 6 };
     for (0..@as(u32, 1) << @intCast(n - 3)) |_| {
         const a2s = as *% as;
@@ -141,8 +194,35 @@ fn pow_xor_confuse(gpa: std.mem.Allocator, n: u32) !struct { []const Result, boo
         }
         as +%= @splat(8);
     }
-    as = .{ 1, 3, 5, 7 };
-    for (0..@as(u32, 1) << @intCast(n - 3)) |_| {
+}
+
+fn pow_xor_confuse_odd_a(comptime mt: bool, r: []Result, n: u32, p: *Prog, j: u32, ji: u32, v: bool) void {
+    if (n == 0) {
+        return;
+    } 
+    if (n == 1) {
+        @memcpy(r, &[_]Result{.{ .a = 1, .b = 0 }});
+        return;
+    } 
+    if (n == 2) {
+        @memcpy(r, &[_]Result{ .{ .a = 1, .b = 0 }, .{ .a = 3, .b = 2 } });
+        return;
+    } 
+    if (n == 3) {
+        @memcpy(r, &[_]Result{ .{ .a = 1, .b = 0 }, .{ .a = 3, .b = 2 }, .{ .a = 5, .b = 4 }, .{ .a = 7, .b = 6 } });
+        return;
+    }
+
+    const m = if (n == 0) std.math.maxInt(u32) else (@as(u32, 1) << @intCast(n)) - 1;
+    const ms: @Vector(4, u32) = @splat(m);
+
+    if (ji == 0) {
+        r[p.prog1(mt)] = .{ .a = 1, .b = 0 };
+        if (v) p.update(n);
+    }
+
+    var as = @Vector(4, u32){ 1, 3, 5, 7 } + @as(@Vector(4, u32), @splat(ji << @intCast(n - j)));
+    for (0..@as(u32, 1) << @intCast(n - 3 - j)) |_| {
         var ks: @Vector(4, u32) = @splat(0);
         var ps = as;
         while (@reduce(.Or, ps != @as(@Vector(4, u32), @splat(1)))) {
@@ -153,17 +233,17 @@ fn pow_xor_confuse(gpa: std.mem.Allocator, n: u32) !struct { []const Result, boo
             const ah = as[i];
             const kh = ks[i];
             if (kh == 0) {} else if (kh == 1) {
-                r[c] = .{ .a = ah, .b = ah & ~@as(u32, 1) };
-                c += 1;
+                r[p.prog1(mt)] = .{ .a = ah, .b = ah & ~@as(u32, 1) };
+                if (v) p.update(n);
             } else if (kh == 2) {
                 if (1 == ah & 3) {
-                    r[c] = .{ .a = ah, .b = ah & ~@as(u32, 1) };
-                    c += 1;
+                    r[p.prog1(mt)] = .{ .a = ah, .b = ah & ~@as(u32, 1) };
+                    if (v) p.update(n);
                 }
                 const bh = (ah ^ (ah *% ah)) & m;
                 if (2 == bh & 3) {
-                    r[c] = .{ .a = ah, .b = bh };
-                    c += 1;
+                    r[p.prog1(mt)] = .{ .a = ah, .b = bh };
+                    if (v) p.update(n);
                 }
             } else {
                 const mhs: @Vector(4, u32) = @splat((@as(u32, 1) << @intCast(kh)) - 1);
@@ -177,10 +257,10 @@ fn pow_xor_confuse(gpa: std.mem.Allocator, n: u32) !struct { []const Result, boo
                 const ahs8: @Vector(4, u32) = @splat(ah *% ah *% phs[3]);
                 b_loop: for (0..@as(u32, 1) << @intCast(kh - 3)) |_| {
                     const dhs = bhs == (ahs ^ phs) & mhs;
-                    for (0..4) |j| {
-                        if (dhs[j]) {
-                            r[c] = .{ .a = ah, .b = (ah ^ phs[j]) & m };
-                            c += 1;
+                    for (0..4) |ii| {
+                        if (dhs[ii]) {
+                            r[p.prog1(mt)] = .{ .a = ah, .b = (ah ^ phs[ii]) & m };
+                            if (v) p.update(n);
                             break :b_loop;
                         }
                     }
@@ -191,6 +271,4 @@ fn pow_xor_confuse(gpa: std.mem.Allocator, n: u32) !struct { []const Result, boo
         }
         as +%= @splat(8);
     }
-
-    return .{ r, true };
 }
