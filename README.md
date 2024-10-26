@@ -6,7 +6,7 @@ It's entirely possible that I am missing something super basic and this is actua
 
 ## Definition of $X_n$
 
-Let $n \in \mathbb{Z}$, $n \geq 0.$
+Let $n \in \mathbb{Z}$, $n \geq 0$.
 
 $X_n$ is the set of solutions $(a, b) \in \mathbb{Z} \times \mathbb{Z}$ to the equation $a^b \equiv a \oplus b \pmod{n}$ for $0 \leq a,b < 2^n$, where $\oplus$ denotes the XOR operation.
 
@@ -21,37 +21,36 @@ The problem is to characterize $X_n$ (enumerate it efficiently).
 ### Properties
 
 Some interesting properties of $X_n$ that I discovered:
- * For all $n \geq 1$, $|X_n| = 2^n-1$. Since that $a$ and $b$ come from sets that are of size $2^n$, you would expect there to be some kind of simple frequency rule like "every value of $a$ appears at most once, and one is missing". Such a rule kind-of exists for $b$, but the behavior for frequencies of $a$ seems really strange.
- * For all $n \geq 0$, a value of $b=0$ appears once (with $a=1$), and every other _even_ value of $b$ appears twice.
- * Every value of $a$ appears once, save for the exceptions listed below, which either appear twice or not at all.
- * Also, what's up with 4 popping up out of nowhere in $n=9$ onwards?
+ * For all $n \geq 1$, $|X_n| = 2^n-1$. Since that $a$ and $b$ come from sets that are of size $2^n$, you would expect there to be some kind of simple frequency rule like "every value of $a$ occurs at most once, and one is missing". Such a rule kind-of exists for $b$, but the behavior for frequencies of $a$ seems really strange.
+ * For all $n \geq 0$, a value of $b=0$ occurs once (with $a=1$), and every other _even_ value of $b$ occurs twice.
+ * Every value of $a$ occurs once, save for the exceptions listed below, which either occur twice or not at all.
+ * The two values of $b$ corresponding to the values of $a$ with two occurrences are: 1. $b=a$ and 2. $b$ is a nonzero value of $a$ with no occurences.
 
-| $n$ | values $a$ with no appearances | values $a$ with 2 appearances                       |
-| --- | ------------------------------ | --------------------------------------------------- |
-| 0   |                                |                                                     |
-| 1   | 0                              |                                                     |
-| 2   | 0                              |                                                     |
-| 3   | 0, 2                           | 6                                                   |
-| 4   | 0, 2                           | 6                                                   |
-| 5   | 0, 2                           | 6                                                   |
-| 6   | 0, 2                           | 38                                                  |
-| 7   | 0, 2, 6                        | 38, 70                                              |
-| 8   | 0, 2, 6                        | 70, 166                                             |
-| 9   | 0, 2, 4, 6                     | 70, 260, 422                                        |
-| 10  | 0, 2, 4, 6                     | 260, 582, 934                                       |
-| 11  | 0, 2, 4, 6, 10                 | 260, 1034, 1606, 1958                               |
-| 12  | 0, 2, 4, 6, 10                 | 260, 1034, 1606, 4006                               |
-| 13  | 0, 2, 4, 6, 10                 | 260, 1034, 1606, 8102                               |
-| 14  | 0, 2, 4, 6, 10                 | 260, 1606, 8102, 9226                               |
-| 15  | 0, 2, 4, 6, 10, 14             | 260, 8102, 16398, 17990, 25610                      |
-| 16  | 0, 2, 4, 6, 10, 14             | 260, 16398, 40870, 50758, 58378                     |
-| 17  | 0, 2, 4, 6, 10, 14             | 16398, 50758, 65796, 106406, 123914                 |
-| 18  | 0, 2, 4, 6, 10, 14             | 16398, 65796, 181830, 237478, 254986                |
-| 19  | 0, 2, 4, 6, 10, 14, 18         | 65796, 181830, 237478, 254986, 262162, 278542       |
-| 20  | 0, 2, 4, 6, 10, 14, 18         | 65796, 181830, 237478, 262162, 278542, 779274       |
-| 21  | 0, 2, 4, 6, 10, 14, 18         | 65796, 262162, 1230406, 1286054, 1327118, 1827850   |
-| 22  | 0, 2, 4, 6, 10, 14, 18         | 262162, 1327118, 1827850, 2162948, 3327558, 3383206 |
-
+| $n$ | values $a$ with no appearances | values $a$ with 2 appearances                                 |
+| 0   |                                |                                                               |
+| 1   | 0                              |                                                               |
+| 2   | 0                              |                                                               |
+| 3   | 0, 2                           | 6                                                             |
+| 4   | 0, 2                           | 6                                                             |
+| 5   | 0, 2                           | 6                                                             |
+| 6   | 0, 2                           | 38                                                            |
+| 7   | 0, 2, 6                        | 38, 70                                                        |
+| 8   | 0, 2, 6                        | 70, 166                                                       |
+| 9   | 0, 2, 4, 6                     | 70, 260, 422                                                  |
+| 10  | 0, 2, 4, 6                     | 260, 582, 934                                                 |
+| 11  | 0, 2, 4, 6, 10                 | 260, 1034, 1606, 1958                                         |
+| 12  | 0, 2, 4, 6, 10                 | 260, 1034, 1606, 4006                                         |
+| 13  | 0, 2, 4, 6, 10                 | 260, 1034, 1606, 8102                                         |
+| 14  | 0, 2, 4, 6, 10                 | 260, 1606, 8102, 9226                                         |
+| 15  | 0, 2, 4, 6, 10, 14             | 260, 8102, 16398, 17990, 25610                                |
+| 16  | 0, 2, 4, 6, 10, 14             | 260, 16398, 40870, 50758, 58378                               |
+| 17  | 0, 2, 4, 6, 10, 14             | 16398, 50758, 65796, 106406, 123914                           |
+| 18  | 0, 2, 4, 6, 10, 14             | 16398, 65796, 181830, 237478, 254986                          |
+| 19  | 0, 2, 4, 6, 10, 14, 18         | 65796, 181830, 237478, 254986, 262162, 278542                 |
+| 20  | 0, 2, 4, 6, 10, 14, 18         | 65796, 181830, 237478, 262162, 278542, 779274                 |
+| 21  | 0, 2, 4, 6, 10, 14, 18         | 65796, 262162, 1230406, 1286054, 1327118, 1827850             |
+| 22  | 0, 2, 4, 6, 10, 14, 18         | 262162, 1327118, 1827850, 2162948, 3327558, 3383206           |
+| 23  | 0, 2, 4, 6, 10, 14, 18, 22     | 1327118, 1827850, 3383206, 4194326, 4456466, 6357252, 7521862 |
 
 #### Proofs
 
