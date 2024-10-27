@@ -39,19 +39,19 @@ character to denote exponentiation. For example, \texttt{2 {\textasciicircum} 3
 + 4} means $2^3+4$ which evaluates to $12$. Many programming languages use the
 same symbol for the bitwise exclusive-or operation, and with this definition
 the expression \texttt{(2 {\textasciicircum} 3) + 4} evaluates to 5. For what
-values of $a$ and $b$ do these two meanings of `\textasciicircum' produce the
-same value for the expression \texttt{a {\textasciicircum} b} (using unsigned
+values of $a$ and $b$ do these two meanings of `\textasciicircum' make the
+expression \texttt{a {\textasciicircum} b} take the same value (using unsigned
 $n$-bit integers)?
 
 \subsection{Formal Problem Statement}
 
 \subsubsection{Preliminary Stuff}
 
-The symbol $\mathbb{N}$ denotes the set of natural numbers, including zero,
-i.e. $\mathbb{N} = \{0, 1, 2, 3, \ldots\}$.
+The symbol $\mathbb{N}$ denotes the set of natural numbers including zero; i.e.
+$\mathbb{N} = \{0, 1, 2, 3, \ldots\}$.
 
 The symbol $\mathbb{Z}$ denotes the set of integers, which are the natural
-numbers and their negations (additive inverses), i.e. $\mathbb{Z} = \{\ldots,
+numbers and their negations (additive inverses); i.e. $\mathbb{Z} = \{\ldots,
 -2, -1, 0, 1, 2, \ldots\}$.
 
 \begin{definition}[congruence modulo an integer]
@@ -99,9 +99,9 @@ Let $n \in \mathbb{N}$.
 \end{definition}
 
 The problem is to design an efficient algorithm which, given $n$, enumerates
-all of of $X_n$. Bonus points if, given one or two of the three variables $a$,
-$b$, and  $n$, the algorithm can efficiently enumerate all possibilities for
-the remaining variables.
+all of of $X_n$. Bonus points if, given only one or two of the three variables
+$a$, $b$, and  $n$, the algorithm can efficiently enumerate all possibilities
+for the remaining variables.
 
 \subsection{Examples}
 
@@ -114,7 +114,7 @@ the remaining variables.
 
     \item
 
-        For all $n \in \mathbb{N}, \; n \geq 1$, $(2^n-1)^{2^n-2} \equiv 1
+        For all $n \in \mathbb{N},\; n \geq 1$, $(2^n-1)^{2^n-2} \equiv 1
         \pmod{2^n}$ and $(2^n-1) \xor (2^n-2) \equiv 1$, so $(n-1, n-2) \in
         X_n$.
 
@@ -142,17 +142,17 @@ different and seemingly unrelated structures on $\mathbb{Z}_{2^n}$. However, as
 it turns out,
 
 \begin{proposition}[Strange Fact]
-    For all $n \in \mathbb{N}, \; n \geq 1$, $|X_n| = 2^n - 1$.
+    For all $n \in \mathbb{N},\; n \geq 1$, $|X_n| = 2^n - 1$.
 \end{proposition}
 
 After observing this result, you might expect that each solution $(a, b) \in
-X_n$ is uniquely determined by either $a$ or $b$. My initial guess was $a$, as
-intuitively I expected the base to dictate more properties of the exponent
+X_n$ is uniquely determined by either $a$ or $b$. My first guess was $a$
+because I expected the base to dictate more properties of the exponent
 operation, like the number of exponents which map to unique powers $\pmod{2^n}$
-by Euler's Theorem.
+which is due to Euler's Theorem.
 
 I collected the frequencies of $a$ and $b$ for $(a, b) \in X_n$ (for $n \geq
-1$), and was surprised by the results:
+1$), and was initially surprised by the results:
 
 \begin{itemize}
 
@@ -167,22 +167,23 @@ I collected the frequencies of $a$ and $b$ for $(a, b) \in X_n$ (for $n \geq
 
     \item
 
-        Every odd $a$ occurs exactly once ($2^{n-1}$ solutions with odd $a$).
+        Every odd $a$ occurs exactly once. There are $2^{n-1}$ solutions with
+        odd $a$.
 
     \item
 
-        $a=0$ never occurs. \textit{Almost} every positive even $a$ occurs
-        once. There are very few exceptions that either occur exactly twice, or
-        never occur at all, and these two kind of exceptions are equinumerous
-        (excluding $a=0$). Hence there are $2^{n-1}-1$ solutions with even $a$,
-        which is what you'd expect.
+        $a=0$ never occurs for any $n$. \textit{Almost} every positive even $a$
+        occurs once. Depending on $n$, there are a few exceptions that either
+        occur exactly twice or never occur at all, and both kinds of exceptions
+        are equinumerous (excluding $a=0$). Hence there are $2^{n-1}-1$
+        solutions with even $a$.
 
 
         \begin{table}[h]
             \centering
             \begin{tabular}{|c|l|l|}
                 \hline
-                \multicolumn{1}{|c|}{$n$} & \multicolumn{1}{|c|}{$a$ occuring exactly twice (duplicate values)} & \multicolumn{1}{|c|}{nonzero $a$ occuring zero times (absent values)} \\
+                \multicolumn{1}{|c|}{$n$} & \multicolumn{1}{|c|}{$a$ occuring exactly twice (duplicate values)} & \multicolumn{1}{|c|}{\emph{nonzero} $a$ occuring zero times (absent values)} \\
                 \hline
                 $1$  &                                                       & \\
                 $2$  &                                                       & \\
@@ -190,22 +191,22 @@ I collected the frequencies of $a$ and $b$ for $(a, b) \in X_n$ (for $n \geq
                 $4$  & $6$                                                   & $2$ \\
                 $5$  & $6$                                                   & $2$ \\
                 $6$  & $38$                                                  & $2$ \\
-                $7$  & $38, 70$                                              & $2, 6$ \\
-                $8$  & $166, 70$                                             & $2, 6$ \\
-                $9$  & $422, 260, 70$                                        & $2, 4, 6$ \\
-                $10$ & $934, 260, 582$                                       & $2, 4, 6$ \\
-                $11$ & $1958, 260, 1606, 1034$                               & $2, 4, 6, 10$ \\
-                $12$ & $4006, 260, 1606, 1034$                               & $2, 4, 6, 10$ \\
-                $13$ & $8102, 260, 1606, 1034$                               & $2, 4, 6, 10$ \\
-                $14$ & $8102, 260, 1606, 9226$                               & $2, 4, 6, 10$ \\
-                $15$ & $8102, 260, 17990, 25610, 16398$                      & $2, 4, 6, 10, 14$ \\
-                $16$ & $40870, 260, 50758, 58378, 16398$                     & $2, 4, 6, 10, 14$ \\
-                $17$ & $106406, 65796, 50758, 123914, 16398$                 & $2, 4, 6, 10, 14$ \\
-                $18$ & $237478, 65796, 181830, 254986, 16398$                & $2, 4, 6, 10, 14$ \\
-                $19$ & $237478, 65796, 181830, 254986, 278542, 262162$       & $2, 4, 6, 10, 14, 18$ \\
-                $20$ & $237478, 65796, 181830, 779274, 278542, 262162$       & $2, 4, 6, 10, 14, 18$ \\
-                $21$ & $1286054, 65796, 1230406, 1827850, 1327118, 262162$   & $2, 4, 6, 10, 14, 18$ \\
-                $22$ & $3383206, 2162948, 3327558, 1827850, 1327118, 262162$ & $2, 4, 6, 10, 14, 18$ \\
+                $7$  & $38,\; 70$                                              & $2,\; 6$ \\
+                $8$  & $166,\; 70$                                             & $2,\; 6$ \\
+                $9$  & $422,\; 260,\; 70$                                        & $2,\; 4,\; 6$ \\
+                $10$ & $934,\; 260,\; 582$                                       & $2,\; 4,\; 6$ \\
+                $11$ & $1958,\; 260,\; 1606,\; 1034$                               & $2,\; 4,\; 6,\; 10$ \\
+                $12$ & $4006,\; 260,\; 1606,\; 1034$                               & $2,\; 4,\; 6,\; 10$ \\
+                $13$ & $8102,\; 260,\; 1606,\; 1034$                               & $2,\; 4,\; 6,\; 10$ \\
+                $14$ & $8102,\; 260,\; 1606,\; 9226$                               & $2,\; 4,\; 6,\; 10$ \\
+                $15$ & $8102,\; 260,\; 17990,\; 25610,\; 16398$                      & $2,\; 4,\; 6,\; 10,\; 14$ \\
+                $16$ & $40870,\; 260,\; 50758,\; 58378,\; 16398$                     & $2,\; 4,\; 6,\; 10,\; 14$ \\
+                $17$ & $106406,\; 65796,\; 50758,\; 123914,\; 16398$                 & $2,\; 4,\; 6,\; 10,\; 14$ \\
+                $18$ & $237478,\; 65796,\; 181830,\; 254986,\; 16398$                & $2,\; 4,\; 6,\; 10,\; 14$ \\
+                $19$ & $237478,\; 65796,\; 181830,\; 254986,\; 278542,\; 262162$       & $2,\; 4,\; 6,\; 10,\; 14,\; 18$ \\
+                $20$ & $237478,\; 65796,\; 181830,\; 779274,\; 278542,\; 262162$       & $2,\; 4,\; 6,\; 10,\; 14,\; 18$ \\
+                $21$ & $1286054,\; 65796,\; 1230406,\; 1827850,\; 1327118,\; 262162$   & $2,\; 4,\; 6,\; 10,\; 14,\; 18$ \\
+                $22$ & $3383206,\; 2162948,\; 3327558,\; 1827850,\; 1327118,\; 262162$ & $2,\; 4,\; 6,\; 10,\; 14,\; 18$ \\
                 \hline
             \end{tabular}
         \end{table}
@@ -217,10 +218,9 @@ I collected the frequencies of $a$ and $b$ for $(a, b) \in X_n$ (for $n \geq
             table above and $b$ is the corresponding value from the
             right-hand-side column. So for example, in row 22, the second
             duplicate $a$ is 2162948, and the second absent $a$ is 4. This
-            means $2162948^4 = 2162948 \xor 4 \pmod{2^{22}}$. With the table
-            above (and that $a=b$ for the rest of the solutions), you can
-            enumerate all solutions $(a, b) \in X_n$ with a positive even $a$
-            for $n \leq 22$.
+            means $2162948^4 = 2162948 \xor 4 \pmod{2^{22}}$. Note that the
+            absent $a$ takes the place of $b$ in the equation $a^b \equiv a
+            \xor b \pmod{2^n}$.
 
 \end{itemize}
 
@@ -228,7 +228,8 @@ I collected the frequencies of $a$ and $b$ for $(a, b) \in X_n$ (for $n \geq
 
 \subsection{Preliminary Stuff}
 
-The lemmas in this section have really easy proofs, and are either generally
+The following lemmas, in addition to basic integer arithmetic, are used in the
+proof. These lemmas have really trivial proofs, and are either generally
 well-known or conveniently rewritten from well-known statements.
 
 \begin{lemma}[congruence modulo an integer is an equivalence relation]
@@ -251,7 +252,7 @@ well-known or conveniently rewritten from well-known statements.
     then $x \equiv y \pmod{n^\prime}$.
 \end{lemma}
 
-\begin{lemma}[congruence modulo an integer respects ring operations]
+\begin{lemma}[congruence modulo an integer respects ring structure]
     \label{lem:mod}
     For every $n \in \mathbb{N}$, congruence modulo $n$ ``respects'' addition,
     subtraction, and multiplication, in the sense that if $x, x^\prime, y,
@@ -264,48 +265,43 @@ well-known or conveniently rewritten from well-known statements.
 
 \begin{lemma}
     \label{lem:red-mod}
-    For every integer $x \in \mathbb{Z}, n \in \mathbb{N}, n \geq 1$, there
-    exists a unique integer $x_0 \in \mathbb{Z}, 0 \leq x_0 < n$, such that
+    For every integer $x \in \mathbb{Z},\; n \in \mathbb{N},\; n \geq 1$, there
+    exists a unique integer $x_0 \in \mathbb{Z},\; 0 \leq x_0 < n$, such that
     $x_0 \equiv x \pmod{n}$.
 \end{lemma}
 
 \begin{definition}[reduction modulo an integer]
     \label{def:red-mod}
-    For every integer $x \in \mathbb{Z}, n \in \mathbb{N}, n \geq 1$, the
+    For every integer $x \in \mathbb{Z},\; n \in \mathbb{N},\; n \geq 1$, the
     reduction of $x \pmod{n}$ is the integer $x_0$ which satisfies
     \ref{lem:red-mod}.
 \end{definition}
 
-\begin{lemma}[Properties of XOR]
+\begin{lemma}[properties of XOR]
     \label{lem:xor-prop}
     The XOR operation is associative, has zero as an identity, is commutative,
-    and is an involution. In other words, for all $x, y, z \in \mathbb{Z}$:
+    and has the property that every element is its own inverse. In other words,
+    for all $x, y, z \in \mathbb{Z}$:
     $$ \displaylines{
         (x \xor y) \xor z = x \xor (y \xor z) \cr
-       x \xor 0 = x \cr
+       0 \xor x = x \cr
        x \xor y = y \xor x \cr
        x \xor x = 0}
    $$
 \end{lemma}
 
-\begin{lemma}[congruence modulo an integer respects XOR]
+\begin{lemma}[congruence modulo a power of two respects XOR]
     \label{lem:xor-mod}
-    For every $n \in \mathbb{N}$, congruence modulo $n$ ``respects'' XOR, in
+    For every $n \in \mathbb{N}$, congruence modulo $2^n$ ``respects'' XOR, in
     the sense that if $x, x, y^\prime, y^\prime \in \mathbb{Z}$ such that $x
-    \equiv x^\prime \pmod{n}$ and $y \equiv y^\prime \pmod{n}$, then $$ x \xor
-    y \equiv x^\prime \xor y^\prime \pmod{n} $$
+    \equiv x^\prime \pmod{2^n}$ and $y \equiv y^\prime \pmod{2^n}$, then $$ x
+    \xor y \equiv x^\prime \xor y^\prime \pmod{2^n} $$
 \end{lemma}
-
-This next result can be shown via Euler's Theorem (note that $\phi(2^n) =
-2^{n-1})$:
 
 \begin{definition}[even and odd (parity)]
     \label{def:parity}
     For an integer $x \in \mathbb{Z}$ to be even means that $x \equiv 0
-    \pmod{2}$.
-
-    For an integer $x \in \mathbb{Z}$ to be odd means that $x \equiv 1
-    \pmod{2}$.
+    \pmod{2}$, and for $x$ to be odd means that $x \equiv 1 \pmod{2}$.
 \end{definition}
 
 \begin{lemma}[existence and uniqueness of a parity]
@@ -319,35 +315,45 @@ This next result can be shown via Euler's Theorem (note that $\phi(2^n) =
     is at least one even factor.
 \end{lemma}
 
-Last but certainly not least, the next lemma is the key to the solution.
-
-\begin{lemma}[Euler's Theorem with base=$2$]
+\begin{lemma}[corollary to Euler's Theorem]
     \label{lem:euler}
     For all integers $x, y, y^\prime \in \mathbb{Z}$, if $x$ is odd, $y,
-    y^\prime \geq 0, \; y \equiv y^\prime \pmod{2^n}$, then $x^{y} \equiv
+    y^\prime \geq 0,\; y \equiv y^\prime \pmod{2^n}$, then $x^{y} \equiv
     x^{y^\prime} \pmod{2^{n+1}}$.
+\end{lemma}
+
+\begin{lemma}[factoring out twos]
+    \label{lem:2fac}
+    For every $x \in \mathbb{Z}$, there exists a unique $k \in \mathbb{N},\; m
+    \in \mathbb{Z}$ such that $x = (1 + m \cdot 2) \cdot 2^k$. Furthermore, $k
+    \geq 1$ if and only if $x$ is even.
+\end{lemma}
+
+\begin{lemma}[lower bound on powers of two]
+    \label{lem:2pow}
+    For every $k \in \mathbb{N}$, $2^k \geq k + 1$.
 \end{lemma}
 
 \subsection{Structure of \texorpdfstring{$X_n$}{Xn}}
 
 \begin{theorem}
     \label{thm:b-even}
-    Let $n \in \mathbb{N},\; n \geq 1$. For all $(a, b) \in X_n$ $b$ is even.
+    For all $n \in \mathbb{N},\; n \geq 1,\; (a, b) \in X_n$, $b$ is even.
 \end{theorem}
 
 \begin{proof}
 
-    Let $(a, b) \in X_n$, so by \ref{def:xn}, $0 \leq a, b < 2^n$ and $a^b
-    \equiv a \xor b \pmod{2^n}$.
+    Let $n \in \mathbb{N},\; n \geq 1,\; (a, b) \in X_n$, so by \ref{def:xn},
+    $0 \leq a, b < 2^n$ and $a^b \equiv a \xor b \pmod{2^n}$.
 
     By \ref{lem:mod-eqrln}, $a \equiv a \pmod{2^n}$, so by \ref{lem:xor-mod},
-    $a \xor (a^b) \equiv a \xor (a \xor b) \pmod{2^n}$. By \ref{lem:xor-prop},
+    $a \xor a^b \equiv a \xor (a \xor b) \pmod{2^n}$. By \ref{lem:xor-prop},
     $a \xor (a \xor b) = (a \xor a) \xor b = 0 \xor b = b$, which by
-    substituting into the previous congruence, yields $a \xor (a^b) \equiv b
+    substituting into the previous congruence, yields $a \xor a^b \equiv b
     \pmod{2^n}$.
 
     Also, $2^n = 0 + 2^{n-1} \cdot 2$, so $2^n \equiv 0 \pmod{2}$ by
-    \ref{def:mod}, so by \ref{lem:mod-red}, $a \xor (a^b) \equiv b \pmod{2}$.
+    \ref{def:mod}, so by \ref{lem:mod-red}, $a \xor a^b \equiv b \pmod{2}$.
 
     By \ref{lem:parity}, either $a$ is even or $a$ is odd.
 
@@ -361,8 +367,8 @@ Last but certainly not least, the next lemma is the key to the solution.
             \equiv 1 \pmod{2}$ and $a^b \equiv 1 \pmod{2}$ by \ref{def:parity}.
             Then, by \ref{lem:xor-mod}, $a \xor a^b \equiv 1 \xor 1 \pmod{2}$.
 
-            Finally, $a \xor (a^b) \equiv b \pmod{2}$ and $a \xor (a^b) \equiv
-            1 \xor 1 \pmod{2}$, so $b \equiv 1 \xor 1 \pmod{2}$ by
+            Finally, $a \xor a^b \equiv b \pmod{2}$ and $a \xor a^b \equiv 1
+            \xor 1 \pmod{2}$, so $b \equiv 1 \xor 1 \pmod{2}$ by
             \ref{lem:mod-eqrln}. Additionally, $1 \xor 1 = 0$ by
             \ref{lem:xor-prop}, so by substituting this equation into the
             previous congruence, $b \equiv 0 \pmod{2}$, which means $b$ is even
@@ -377,8 +383,8 @@ Last but certainly not least, the next lemma is the key to the solution.
             \equiv 0 \pmod{2}$ and $a^b \equiv 0 \pmod{2}$ by \ref{def:parity}.
             Then, by \ref{lem:xor-mod}, $a \xor a^b \equiv 0 \xor 0 \pmod{2}$.
 
-            Finally, $a \xor (a^b) \equiv b \pmod{2}$ and $a \xor (a^b) \equiv
-            0 \xor 0 \pmod{2}$, so $b \equiv 0 \xor 0 \pmod{2}$ by
+            Finally, $a \xor a^b \equiv b \pmod{2}$ and $a \xor a^b \equiv 0
+            \xor 0 \pmod{2}$, so $b \equiv 0 \xor 0 \pmod{2}$ by
             \ref{lem:mod-eqrln}. Additionally, $0 \xor 0 = 0$ by
             \ref{lem:xor-prop}, so by substituting this equation into the
             previous congruence, $b \equiv 0 \pmod{2}$, which means $b$ is even
@@ -386,14 +392,14 @@ Last but certainly not least, the next lemma is the key to the solution.
 
     \end{itemize}
 
-    \hfill\proofSymbol
+    In both cases, $b$ is even. \hfill\proofSymbol
 
 \end{proof}
 
 \begin{theorem}
     \label{thm:odd-a}
-    Let $n \in \mathbb{N}, n \geq 1$. For every odd $a \in \mathbb{Z},\; 0 \leq
-    a < 2^n$ there exists a unique $b$ such that $(a, b) \in X_n$.
+    For all $n \in \mathbb{N},\; n \geq 1$, for every odd $a \in \mathbb{Z},\;
+    0 \leq a < 2^n$ there exists a unique $b$ such that $(a, b) \in X_n$.
 \end{theorem}
 
 \begin{proof}
@@ -404,18 +410,19 @@ Last but certainly not least, the next lemma is the key to the solution.
 
         \item
 
-            Consider the case where $n = 1$. Let $0 \leq a < 2^1$. The only
-            choices for $a$ such that $0 \leq a < 2^1$ are 0 and 1. Only 1 is
-            odd. What remains is to show that there exists a unique $b \in
-            \mathbb{Z}$ such that $(a, b) \in X_1$.
+            Let $n = 1$. Let $a \in \mathbb{Z},\; 0 \leq a < 2^1$ such that $a$
+            is odd. The only value that works is $a=1$. What remains to be
+            shown is that there exists a unique $b \in \mathbb{Z}$ such that
+            $(1, b) \in X_1$.
 
-            Existence of $b$: By by \ref{lem:mod-eqrln}, the congruence $1
-            \equiv 1 \pmod{2^1}$ holds. Additionally, $1^0 = 1$ and $1 \xor 0 =
-            1$ by \ref{lem:xor-prop}. By substituting these equations into the
-            congruence, $1^0 \equiv 1 \xor 0 \pmod{2^1}$. Since $0 \leq 1, 0 <
-            2^1$, by \ref{def:xn} $(a, b) = (1, 0) \in X_1$.
+            Existence of $b$: By \ref{lem:mod-eqrln}, $1 \equiv 1 \pmod{2^1}$.
+            Additionally, $1 = 1^0$, and $1 = 0 \xor 1 = 1 \xor 0$ by
+            \ref{lem:xor-prop}. By substituting these equations into the
+            congruence, $1^0 \equiv 1 \xor 0 \pmod{2^1}$. Then, $(a, b) = (1,
+            0)$ satisfies both $0 \leq a,b < 2^1$ and $a^b \equiv a \xor b
+            \pmod{2^1}$, so by \ref{def:xn} $(1, 0) \in X_1$.
 
-            Uniqueness of $b$: Let $b, b^\prime$ such that $(a, b), (a,
+            Uniqueness of $b$: Let $b, b^\prime$ such that $(1, b), (1,
             b^\prime) \in X_1$. Then, by \ref{def:xn}, $0 \leq b, b^\prime <
             2^1$. There are only two choices for each of $b, b^\prime$ such
             that $0 \leq b, b^\prime < 2^1$, namely 0 and 1. By
@@ -425,25 +432,27 @@ Last but certainly not least, the next lemma is the key to the solution.
 
         \item
 
-            Now suppose that \ref{thm:odd-a} holds for $n = n_0 \in \mathbb{N},
-            n_0 \geq 1$. Let $0 \leq a < 2^{n_0+1}$ such that $a$ is odd. What
-            remains is to show that there exists a unique $b \in \mathbb{Z}$
-            such that $(a, b) \in X_{n_0+1}$.
+            Suppose that \ref{thm:odd-a} holds for $n = n_0 \in \mathbb{N},\;
+            n_0 \geq 1$ (inductive hypothesis). Let $a \in \mathbb{Z},\; 0 \leq
+            a < 2^{n_0+1}$ such that $a$ is odd. What remains to be shown is
+            that there exists a unique $b \in \mathbb{Z}$ such that $(a, b) \in
+            X_{n_0+1}$.
 
-            Existence: Let $a_0$ be the reduction of $a \pmod{2^{n_0}}$. The
-            remaining proof is lengthy, so it is divided into self-contained
-            steps (each one only uses the last result of the previous one):
+            Existence: Let $a_0$ be the reduction of $a \pmod{2^{n_0}}$. By the
+            existence part of the inductive hypothesis, there exists a $b_0$
+            such that $(a_0, b_0) \in X_{n_0}$, so $0 \leq a_0, b_0 < 2^{n_0}$
+            and $a_0^{b_0} \equiv a_0 \xor b_0 \pmod{2^{n_0}}$ by \ref{def:xn}.
+            The remaining proof is lengthy, so it is divided into
+            self-contained steps (each step only uses the final result of the
+            previous step):
 
             \begin{enumerate}
 
                 \item
 
-                    By the inductive hypothesis, there exists a unique $b_0$
-                    such that $(a_0, b_0) \in X_{n_0}$, so $0 \leq a_0, b_0 <
-                    2^{n_0}$ and $a_0^{b_0} \equiv a_0 \xor b_0 \pmod{2^{n_0}}$
-                    by \ref{def:xn}. By \ref{lem:mod-eqrln}, $a_0 \equiv a_0
-                    \pmod{2^{n_0}}$, so $a_0 \xor (a_0^{b_0}) \equiv a_0 \xor
-                    (a_0 \xor b_0) \pmod{2^{n_0}}$ by \ref{lem:xor-mod}. By
+                    By \ref{lem:mod-eqrln}, $a_0 \equiv a_0 \pmod{2^{n_0}}$, so
+                    $a_0 \xor a_0^{b_0} \equiv a_0 \xor (a_0 \xor b_0)
+                    \pmod{2^{n_0}}$ by \ref{lem:xor-mod}. By
                     \ref{lem:xor-prop}, $a_0 \xor (a_0 \xor b_0) = (a_0 \xor
                     a_0) \xor b_0 = 0 \xor b_0 = b_0$. By substituting into the
                     previous congruence, $a_0 \xor a_0^{b_0} \equiv b_0
@@ -457,38 +466,35 @@ Last but certainly not least, the next lemma is the key to the solution.
 
                 \item
 
-                    \label{step:odd-a-exis-b} Since $a$ is also odd, by
-                    \ref{lem:euler} it follows that $a^{b_0} \equiv a^{a \xor
-                    a^{b_0}} \pmod{2^{n_0+1}}$. By \ref{lem:xor-prop}, $a^{b_0}
-                    ,= 0 \xor a^{b_0} = (a \xor a) \xor a^{b_0} = a \xor (a
-                    \xor a^{b_0})$. Finally, substituting this last equation
-                    into the congruence before it yields $a \xor (a \xor
-                    a^{b_0}) \equiv a^{a \xor a^{b_0}} \pmod{2^{n_0+1}}$.
-                    Almost there!
+                    Let $b$ be the reduction of $a \xor a^{b_0}
+                    \pmod{2^{n_0+1}}$, so $0 \leq b < 2^{n_0+1}$ and $b \equiv
+                    a \xor a^{b_0} \pmod{2^{n_0+1}}$ by \ref{def:red-mod}.
+                    Since $b \equiv a \xor a^{b_0} \pmod{2^{n_0}}$ and $b_0
+                    \equiv a \xor a^{b_0} \pmod{2^{n_0}}$, by
+                    \ref{lem:mod-eqrln} $b \equiv b_0 \pmod{2^{n_0}}$. Since
+                    $a$ is odd, by \ref{lem:euler} it follows that $a^b \equiv
+                    a^{b_0} \pmod{2^{n_0+1}}$.
 
                 \item
 
-                    Let $b$ be the reduction of $a \xor a^{b_0}
-                    \pmod{2^{n_0+1}}$, so $0 \leq b < 2^{n_0+1}$ and $b \equiv
-                    a \xor a^{b_0} \pmod{2^{n_0+1}}$ by \ref{def:red-mod}. By
-                    \ref{lem:mod-eqrln}, $a \equiv a \pmod{2^{n_0+1}}$, so $a
-                    \xor (a \xor a^{b_0}) \equiv a \xor b \pmod{2^{n_0+1}}$ by
-                    \ref{lem:xor-mod}. Additionally, $2^{n_0+1} = 0 + 2 \cdot
-                    2^{n_0}$, so $2^{n_0+1} \equiv 0 \pmod{2^{n_0}}$ by
-                    \ref{def:mod}. Thus, by \ref{lem:mod-red} $b \equiv a \xor
-                    a^{b_0} \pmod{2^{n_0}}$. By \ref{lem:euler}, $a^b \equiv
-                    a^{a \xor a^{b_0}} \pmod{2^{n_0+1}}$. At last, using the
-                    result from step (b), by \ref{lem:mod-eqrln} $a^b \equiv
-                    a^{a \xor a^{b_0}} \equiv a \xor (a \xor a^{b_0}) \equiv a
-                    \xor b \pmod{2^{n_0+1}}$ impies  that $a^b \equiv a \xor b
-                    \pmod{2^{n_0+1}}$. Since $0 \leq a, b < 2^{n_0+1}$, $(a, b)
-                    \in X_{n_0+1}$ by \ref{def:xn}.
+                    By \ref{lem:xor-prop}, $a^{b_0} = 0 \xor a^{b_0} = (a \xor
+                    a) \xor a^{b_0} = a \xor (a \xor a^{b_0})$, so by
+                    substituting this equality into the congruence from the
+                    previous step, $a^b \equiv a \xor (a \xor a^{b_0})
+                    \pmod{2^{n_0+1}}$. Since $b$ was defined as the reduction
+                    of $a \xor a^{b_0} \pmod{2^{n_0+1}}$, by \ref{def:red-mod}
+                    $b \equiv a \xor a^{b_0} \pmod{2^{n_0+1}}$. By
+                    \ref{lem:xor-prop}, $a \equiv a \pmod{2^{n_0}+1}$, so by
+                    \ref{lem:xor-mod}, $a \xor b \equiv a \xor (a \xor a^{b_0})
+                    \pmod{2^{n_0+1}}$. Finally, by \ref{lem:mod-eqrln}, $a \xor
+                    b \equiv a \xor (a \xor a^{b_0}) \pmod{2^{n_0+1}}$ and $a^b
+                    \equiv a \xor (a \xor a^{b_0}) \pmod{2^{n_0+1}}$ together
+                    imply that $a^b \equiv a \xor b \pmod{2^{n_0+1}}$.
 
             \end{enumerate}
 
             Uniqueness of $b$: Let $b, b^\prime$ such that $(a, b), (a,
             b^\prime) \in X_{n+1}$.
-
             Let $a_0, b_0, b^\prime_0$ be the reductions of $a, b, b^\prime
             \pmod{2^{n_0}}$, respectively. The remaining proof is lengthy, so
             it is divided into self-contained parts (the results of both parts
@@ -515,9 +521,9 @@ Last but certainly not least, the next lemma is the key to the solution.
 
                     By \ref{lem:mod-eqrln} $a_0^{b_0} \equiv a^{b_0} \equiv a^b
                     \pmod{2^{n_0}}$ implies that $a_0^{b_0} \equiv a^b
-                    \pmod{2^{n_0}}$, and $a_0^{b^\prime_0} \equiv
+                    \pmod{2^{n_0}}$ and similarly $a_0^{b^\prime_0} \equiv
                     a^{b^\prime_0} \equiv a^{b^\prime} \pmod{2^{n_0}}$ implies
-                    that $a_0^{b^prime_0} \equiv a^b \pmod{2^{n_0}}$.
+                    that $a_0^{b^\prime_0} \equiv a^b \pmod{2^{n_0}}$.
 
                 \item
                     Since $(a, b), (a, b^\prime) \in X_{n_0+1}$, by
@@ -549,10 +555,10 @@ Last but certainly not least, the next lemma is the key to the solution.
             Therefore, using \ref{lem:mod-eqrln}, $a_0^{b_0} \equiv a_0 \xor
             b_0 \pmod{2^{n_0}}$ and $a_0^{b^\prime_0} \equiv a_0 \xor
             b^\prime_0 \pmod{2^{n_0}}$. Since it also true that $0 \leq a_0,
-            b_0, b^\prime_0$, by \ref{def:xn} $(a_0, b_0), (a_0, b^\prime_0)
-            \in X_{n_0}$. By the uniqueness part of the inductive hypothesis,
-            it follows that $b_0 = b^\prime_0$. What remains to be shown is that
-            in fact $b = b^\prime$.
+            b_0, b^\prime_0 < 2^{n_0}$, by \ref{def:xn} $(a_0, b_0), (a_0,
+            b^\prime_0) \in X_{n_0}$. By the uniqueness part of the inductive
+            hypothesis, it follows that $b_0 = b^\prime_0$. What remains to be
+            shown is that in fact $b = b^\prime$.
 
             By \ref{def:red-mod}, $b \equiv b_0 \pmod{2^{n_0}}$. Substituting
             $b_0 = b^\prime_0$ yields $b \equiv b^\prime_0 \pmod{2^{n_0}}$. By
@@ -573,33 +579,104 @@ Last but certainly not least, the next lemma is the key to the solution.
             b^\prime$. Substituting these two equations into the previous
             congruence at last gives $b \equiv b^\prime \pmod{2^{n_0+1}}$.
 
-            By \ref{lem:red-mod}, there is a unique integer $b_0 \in
-            \mathbb{Z}, 0 \leq b_0 < 2^{n_0+1}$ such that $b_0 \equiv b
+            By \ref{lem:red-mod}, there is a unique integer $b_s \in
+            \mathbb{Z},\; 0 \leq b_s < 2^{n_0+1}$ such that $b_s \equiv b
             \pmod{2^{n_0+1}}$. However, $0 \leq b < 2^{n_0+1}$ and $b \equiv b
-            \pmod{2^{n_0+1}}$ by \ref{lem:mod-eqrln}, but on the other hand $0
-            \leq b^\prime < 2^{n_0+1}$ and $b \equiv b^\prime
-            \pmod{2^{n_0+1}}$. Thus $b = b_0 = b^\prime$, so in particular, $b
-            = b^\prime$.
+            \pmod{2^{n_0+1}}$ by \ref{lem:mod-eqrln}, and similarly $0 \leq
+            b^\prime < 2^{n_0+1}$ and $b \equiv b^\prime \pmod{2^{n_0+1}}$.
+            The uniqueness of $b_s$ implies that $b = b_s = b^\prime$, so in
+            particular $b = b^\prime$.
 
     \end{enumerate}
 
-    By the principle of induction, it follows that for all $n \in \mathbb{N},\;
-    n \geq 1$, and for every odd $a \in \mathbb{Z},\; 0 \leq a < 2^n$ there
-    exists a unique $b$ such that $(a, b) \in X_n$.
-
-    \hfill\proofSymbol
+    By the principle of induction, for every odd $a \in \mathbb{Z},\; 0 \leq a
+    < 2^n$ there exists a unique $b$ such that $(a, b) \in X_n$, for all $n \in
+    \mathbb{Z},\; n \geq 1$. \hfill\proofSymbol
 
 \end{proof}
 
 \begin{theorem}
     \label{thm:even-a}
-    Let $n \in \mathbb{N}, n \geq 1$. For every $0 \leq b < 2^n$, there
-    exists a unique even $a \in \mathbb{Z}$ such that $(a, b) \in X_n$.
+    Let $n \in \mathbb{N},\; n \geq 1$. For every positive even $b \in
+    \mathbb{Z},\; 0 < b < 2^n$, there exists a unique even $a \in \mathbb{Z}$
+    such that $(a, b) \in X_n$.
 \end{theorem}
 
 \begin{proof}
 
-    TODO
+    Let $b \in \mathbb{Z}$ be a positive even integer.
+
+    By \ref{lem:2fac}, since $b$ is even, $b = (1 + m \cdot 2) \cdot 2^k$ for
+    some $k \in \mathbb{N}, m \in \mathbb{Z}, k \geq 1$. Since also $b = (1 + m
+    \cdot 2) \cdot 2^k \geq 2^k > k+1$ by \ref{lem:2pow}.
+
+    Let $\{n_i\}_{n=0}^\infty$ be a sequence in $\mathbb{N}$ and
+    let $\{a_i\}_{i=0}^\infty$ be a sequence in $\mathbb{Z}$
+    defined recursively as 
+    $$ n_0 = k+1 \qquad n_{i+1} = n_i + (k-1), $$
+    $$ a_0 = 2^{k} \qquad a_{i+1} = a_i^b \oplus b. $$
+
+    The proof proceeds by induction on $i$ to show that for all $i \geq 0$,
+    $a_i$ is the unique solution for $a$ to the system $0 \leq a < 2^{n_i},\;
+    a^b \equiv a \oplus b \pmod{2^{n_i}},\; a \equiv 0 \pmod{2}$.
+
+    \begin{enumerate}
+
+        \item
+
+            Let $i = 0$. 
+
+            Since, $0 \leq a_0 = 2^k < 2^{k+1}$, $a_0$ solves the first part of
+            the system.
+
+            $a_0 = 2^k + 0 \cdot 2^{k+1}$, so by \ref{def:mod} $a_0 \equiv 2^k
+            \pmod{2^{k+1}}$ and similarly $b = (1 + m \cdot 2) \cdot 2^k = 2^k
+            + m \cdot 2^{k+1}$, so $b \equiv 2^k \pmod{2^{k+1}}$ by
+            \ref{def:mod}.
+
+            By \ref{lem:xor-mod}, $a_0 \xor b \equiv 2^k \xor 2^k
+            \pmod{2^{k+1}}$. By \ref{lem:xor-prop}, $2^k \xor 2^k = 0$, so
+            substituting this equality into the previous congruence produces
+            $a_0 \xor b \equiv 0 \pmod{2^{k+1}}$. Since $b > k + 1$ and $k \geq
+            1$, $b \cdot k > k + 1$. $a_0 = 2^k$, so $a_0^b = 2^{bk} = 0 +
+            2^{bk-k-1} \cdot 2^{k+1}$, and so by \ref{def:mod} $a_0^b \equiv 0
+            \pmod{2^{k+1}}$. Since $a_0^b \equiv 0 \pmod{2^{k+1}}$ and $a_0
+            \xor b \equiv 0 \pmod{2^{k+1}}$ it follows from \ref{lem:mod-eqrln}
+            that $a_0^b \equiv a_0 \xor b \pmod{2^{k+1}}$. So, $a_0$ solves the
+            second part of the system.
+
+            Finally, $k \geq 1$, so $a_0 = 2^k = 0 + 2^{k-1} \cdot 2$, so $a_0
+            \equiv{0} \pmod{2}$ by \ref{def:mod}. Thus $a_0$ satisfies the
+            third part of the system.
+
+            Since $a_0$ satisfies all three parts of the system, it is a
+            solution to the whole system. What is left is to show that $a_0$ is
+            the unique solution. 
+
+            Consider another solution to the system, say $a^\prime$. By the
+            third part of the system, $a^\prime \equiv 0 \pmod{2}$, which means
+            $a^\prime = 0 + a_r \cdot 2 = a_r \cdot 2$ for some $a_r \in
+            \mathbb{Z}$ by \ref{def:mod}. Then since $b > k + 1$, ${a^\prime}^b
+            = (a_r \cdot 2)^b = 0 + (a_r^b \cdot 2^{b-k-1}) \cdot 2^{k+1}$,
+            which means ${a^\prime}^b \equiv 0 \pmod{2^{k+1}}$. Now since
+            $a^\prime$ satisfies the second part of the solution, ${a^\prime}^b
+            \equiv a^\prime \xor b \pmod{2^{k+1}}$. By \ref{lem:mod-eqrln}, the
+            previous two congrunces imply that $a^\prime \xor b \equiv 0
+            \pmod{2^{k+1}}$. By \ref{lem:mod-eqrln}, $b \equiv b
+            \pmod{2^{k+1}}$, so $(a^\prime \xor b) \xor b \equiv 0 \xor b
+            \pmod{2^{k+1}}$. By \ref{lem:xor-prop}, $(a^\prime \xor b) \xor b =
+            a^\prime \xor (b \xor b) = a^\prime \xor 0 = 0 \xor a^\prime =
+            a^\prime$ and $0 \xor b = b$, so substituting into the last
+            congruence yields $a^\prime \equiv b \pmod{2^{k+1}}$. Finally,
+            using the fact that $a_0 \equiv b \pmod{2^{k+1}}$ and that $a_0$
+            satisfies the third part of the system, which is that $0 \leq a_0 <
+            2^{k+1}$, it must be the case that $a_0$ is the reduction of $b
+            \pmod{2^{k+1}}$ by \ref{lem:red-mod}. However, $0 \leq 2^k <
+            2^{k+1}$ and $2^k \equiv b \pmod{2^{k+1}}$ (by
+            \ref{lem:mod-eqrln}), so $2^k$ is the reduction of $b \pmod
+            {2^{k+1}}$. Therefore, $a^\prime = 2^k$.
+
+    \end{enumerate}
 
     \hfill\proofSymbol
 
