@@ -29,6 +29,7 @@ jobs:
       - name: Compile LaTeX
         run: |
           pdflatex main/doc/pow_xor_confuse.tex
+          pdflatex main/doc/pow_xor_confuse.tex
 
       - name: Upload PDF
         run: |
