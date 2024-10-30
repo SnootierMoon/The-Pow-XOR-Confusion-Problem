@@ -1,0 +1,290 @@
+\documentclass[1gpt]{article}
+\usepackage[a4paper, left=1in, right=1in, top=1in, bottom=1in]{geometry}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{ntheorem}
+\usepackage{parskip}
+\usepackage{titling}
+\usepackage[colorlinks]{hyperref}
+\usepackage{pdfcomment}
+\usepackage{ifthen}
+\setlength{\parindent}{0in}
+\setlength{\textheight}{9.in}
+
+\theoremstyle{break}
+\theoremheaderfont{\kern-1em\normalfont\bfseries}
+\theoremindent=2em
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{nonumberbreak}
+\theorembodyfont{\normalfont}
+\theoremheaderfont{\kern-1em\normalfont\itshape}
+\theoremindent=1em
+\theoremsymbol{\ensuremath{\square}}
+\newtheorem{proof}{Proof}
+
+\newenvironment{Thm}[2][]{\def\thmlabel{#2}\ifthenelse{\equal{#1}{}}{\begin{theorem}\label{Thm:#2}}{\begin{theorem}[#1]\label{Thm:#2}}}{\hyperref[Prf:\thmlabel]{proof.}\end{theorem}}
+\newenvironment{Lem}[2][]{\def\lemlabel{#2}\ifthenelse{\equal{#1}{}}{\begin{lemma}\label{Lem:#2}}{\begin{lemma}[#1]\label{Lem:#2}}}{\hyperref[Prf:\lemlabel]{proof.}\end{lemma}}
+\newenvironment{Prp}[2][]{\ifthenelse{\equal{#1}{}}{\begin{proposition}\label{Prp:#2}}{\begin{proposition}[#1]\label{Prp:#2}}}{\end{proposition}}
+\newenvironment{Def}[2]{\begin{definition}[#1]\label{Def:#2}}{\end{definition}}
+\newenvironment{Prf}[1]{\begin{proof}[\ref{Lem:#1}]\makeatletter\def\@currentlabel{proof}\makeatother\label{Prf:#1}}{\end{proof}}
+
+\setlength{\droptitle}{-4em}
+\title{The Pow-XOR Equivalence Problem and an Efficient Solution}
+\vspace{-2em}
+\author{Akshay Trivedi}
+\date{\vspace{-3em}}
+
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\xor}{\oplus}
+\renewcommand{\familydefault}{\sfdefault}
+
+\begin{document}
+
+\maketitle
+
+\section{Problem Statement}
+
+When writing equations over ASCII text, people often use the `\textasciicircum' character to denote exponentiation. For example, \texttt{2 {\textasciicircum} 3 + 4} means $2^3+4$ which evaluates to $12$. Many programming languages use the same symbol for the ``bitwise exclusive or'' operation, and under this definition
+the expression \texttt{(2 {\textasciicircum} 3) + 4} evaluates to 5. For what values of $a$ and $b$ do these two meanings of `\textasciicircum' make the expression \texttt{a {\textasciicircum} b} take on the same value (using unsigned $n$-bit integers, i.e. modulo $2^n$)?
+
+\subsection{Formal Problem Statement}
+
+\subsubsection{Preliminary Stuff}
+
+The symbol $\NN$ denotes the set of natural numbers including zero; i.e. $\NN = \{0, 1, 2, 3, \ldots\}$.
+
+The symbol $\ZZ$ denotes the set of integers, which are the natural numbers and their negations (additive inverses); i.e. $\ZZ = \{\ldots, -2, -1, 0, 1, 2, \ldots\}$.
+
+\begin{Def}{congruence modulo an integer}{mod}
+
+    Let $x, y \in \ZZ,\; n \in \NN$. For $x$ and $y$ to be congruent modulo $n$, denoted by $x \equiv y \pmod{n}$, means that $x = y + k \cdot n$ for some $k \in \ZZ$. %The modulus of the congruence is $n$.
+
+\end{Def}
+
+\begin{Lem}{xor}
+
+    There exists a unique binary operation $f: \ZZ \times \ZZ \longrightarrow \ZZ$ that assigns to every $x, y \in \ZZ$ some $f(x, y) \in \ZZ$ with the following properties:
+
+    \begin{enumerate}
+
+        \item
+
+            This operation is associative, has zero as an identity, has the property that every element is its own inverse, and is commutative. In other words, for all integers $x, y, z \in \ZZ$:
+
+            \begin{center}
+                Associativity: $f(f(x, y), z) = f(x, f(y, z))$ \\
+                Zero Identity: $f(0, x) = f(x, 0) = x$ \\
+                Self-inverse: $f(x, x) = 0$ \\
+                Commutativity: $f(x, y) = f(y, x)$
+            \end{center}
+
+        \item
+            For all natural numbers $n \in \NN$, congruence modulo $2^n$ respects $f$; in other words, for all $x_1, x_2, y_1, y_2 \in \ZZ$,
+
+            \begin{center}
+                if $x_1 \equiv x_2 \pmod{2^n}$ and $y_1 \equiv y_2 \pmod{2^n}$
+                then $f(x_1, y_1) \equiv f(x_2, y_2) \pmod{2^n} $.
+            \end{center}
+
+    \end{enumerate}
+
+\end{Lem}
+
+\begin{Def}{bitwise exclusive or / XOR}{xor}
+
+    For every $x, y \in \ZZ$, the bitwise exclusive or/XOR of $x$ and $y$ is the $x \xor y \in \ZZ$ assigned to them by the operation described in \ref{Lem:xor}; i.e. $x \xor y = f(x, y)$.
+
+\end{Def}
+
+\subsubsection{The Problem}
+
+Let $n \in \NN$.
+
+\begin{Def}{$X_n$}{xn}
+
+    $X_n$ is the set of all solutions $(a, b) \in \ZZ \times \ZZ,\; 0 \leq a,b < 2^n$ to the congruence $a^b \equiv a \xor b \pmod{2^n}$.
+
+\end{Def}
+
+The problem is to design an efficient algorithm which, given $n$, enumerates all of of $X_n$. Bonus points: given any of the three variables $a, b \in \ZZ,\; n \in \NN$, enumerate the possibilities for the rest of the variables.
+
+\subsection{Examples}
+
+\begin{itemize}
+
+    \item
+
+        For all $n \in \NN,\; n \geq 1$, $1^0 \equiv 1 \pmod{2^n}$ and $1 \xor 0 = 1$, so $(1, 0) \in X_n$.
+
+    \item
+
+        For all $n \in \NN,\; n \geq 1$, $(2^n-1)^{2^n-2} \equiv 1 \pmod{2^n}$ and $(2^n-1) \xor (2^n-2) \equiv 1$, so $(n-1, n-2) \in X_n$.
+
+    \item
+
+        $0^0 = 1 \equiv 0 = 0 \xor 0 \pmod{2^0}$, so $(0, 0) \in X_0$ (in fact, $X_0 = \{(0, 0)\}$).
+
+    \item
+
+        $(3109287477, 2325659185) \in X_{32}$ because $$3109287477^{869091332} \equiv 2325659185 = 3109287477 \xor 869091332 \pmod{2^{32}}.$$
+
+\end{itemize}
+
+\subsection{Properties of \texorpdfstring{$X_n$}{Xn} (warning: spoilers)}
+
+You might expect the size of $X_n$ to be kind of ``random-ish'' since modular exponentiation and bitwise exclusive-or come from different and seemingly unrelated structures on $\mathbb{Z}_{2^n}$. However, as it turns out,
+
+\begin{Prp}[Strange Fact]{strange-fact}
+    For all $n \in \mathbb{N},\; n \geq 1$, $|X_n| = 2^n - 1$.
+\end{Prp}
+
+After observing this result, you might expect that each solution $(a, b) \in X_n$ is uniquely determined by either $a$ or $b$. My first guess was $a$ because I expected the base to dictate more properties of the exponent operation, like the number of exponents which map to unique powers $\pmod{2^n}$ which is due to Euler's Theorem.
+
+I collected the frequencies of $a$ and $b$ for $(a, b) \in X_n$ (for $n \geq 1$), and was initially surprised by the results:
+
+\begin{itemize}
+
+    \item
+
+        $b$ is always even. $b = 0$ occurs exactly once, and comes from the solution $(a, b) = (1, 0) \in X_n$. Every positive even integer $0 < b < 2^n$ occurs exactly twice. By summing the frequencies of $b$'s, $|X_n| = 2 \cdot (2^{n-1} - 1) + 1 = 2^n - 1$ since there are two solutions for each of the $2^{n-1} - 1$ even positive integers and one extra solution for $b=0$.
+
+    \item
+
+        Every odd $a$ occurs exactly once. There are $2^{n-1}$ solutions with odd $a$.
+
+    \item
+
+        $a=0$ never occurs for any $n$. \textit{Almost} every positive even $a$ occurs once. Depending on $n$, there are a few exceptions that either occur exactly twice or never occur at all, and both kinds of exceptions are equinumerous (excluding $a=0$). Hence there are $2^{n-1}-1$ solutions with even $a$.
+
+        \begin{table}[h]
+            \centering
+            \begin{tabular}{|c|l|l|}
+                \hline
+                \multicolumn{1}{|c|}{$n$} & \multicolumn{1}{|c|}{$a$ occuring exactly twice (duplicate values)} & \multicolumn{1}{|c|}{\emph{nonzero} $a$ occuring zero times (absent values)} \\
+                \hline
+                $1$  &                                                       & \\
+                $2$  &                                                       & \\
+                $3$  & $6$                                                   & $2$ \\
+                $4$  & $6$                                                   & $2$ \\
+                $5$  & $6$                                                   & $2$ \\
+                $6$  & $38$                                                  & $2$ \\
+                $7$  & $38,\; 70$                                              & $2,\; 6$ \\
+                $8$  & $166,\; 70$                                             & $2,\; 6$ \\
+                $9$  & $422,\; 260,\; 70$                                        & $2,\; 4,\; 6$ \\
+                $10$ & $934,\; 260,\; 582$                                       & $2,\; 4,\; 6$ \\
+                $11$ & $1958,\; 260,\; 1606,\; 1034$                               & $2,\; 4,\; 6,\; 10$ \\
+                $12$ & $4006,\; 260,\; 1606,\; 1034$                               & $2,\; 4,\; 6,\; 10$ \\
+                $13$ & $8102,\; 260,\; 1606,\; 1034$                               & $2,\; 4,\; 6,\; 10$ \\
+                $14$ & $8102,\; 260,\; 1606,\; 9226$                               & $2,\; 4,\; 6,\; 10$ \\
+                $15$ & $8102,\; 260,\; 17990,\; 25610,\; 16398$                      & $2,\; 4,\; 6,\; 10,\; 14$ \\
+                $16$ & $40870,\; 260,\; 50758,\; 58378,\; 16398$                     & $2,\; 4,\; 6,\; 10,\; 14$ \\
+                \hline
+            \end{tabular}
+        \end{table}
+
+        \item
+
+            In fact, most solutions with a positive even $a$ satisfy $a=b$. Theonly exceptions are when $a$ is in the left-hand-side column of the table above and $b$ is the corresponding value from the right-hand-side column. So for example, in row 16, the third duplicate $a$ is 50758, and the third absent $a$ is 6. This means $50758^6 = 50758 \xor 6 \pmod{2^{16}}$. Note that the absent $a$ takes the place of $b$ in the equation $a^b \equiv a \xor b \pmod{2^n}$.
+
+\end{itemize}
+
+\section{Solution}
+
+\subsection{Preliminary Stuff}
+
+The following lemmas, in addition to basic integer arithmetic, are used in the proof. These lemmas have really trivial proofs, and are either generally well-known or conveniently rewritten from well-known statements.
+
+\begin{Lem}{red-mod}
+
+    For every $x \in \ZZ,\; n \in \NN,\; n \geq 1$, there exists a unique $x_0 \in \ZZ,\; 0 \leq x_0 < n$, such that $x_0 \equiv x \pmod{n}$.
+
+\end{Lem}
+
+\begin{Def}{reduction modulo an integer}{red-mod}
+
+    For every $x \in \ZZ,\; n \in \NN,\; n \geq 1$, the reduction of $x \pmod{n}$ is the $x_0$ which satisfies \ref{Lem:red-mod}.
+
+\end{Def}
+
+\section{Proving All of the Preliminary Stuff}
+
+\subsection{Defining XOR}
+
+The assumption underpinning this entire document is that there is a well-defined operation satisfying the XOR axioms listed at the beginning. Indeed, not only does one exist, but it is unique. This shall now be proven by defining the XOR operation formally and showing that it alone satisfies the stated axioms.
+
+\begin{Prf}{xor}
+
+    Existence:
+
+    The first step is to prove by induction on $n \in \NN$ that every $x \in \ZZ,\; 0 \leq x < 2^n$ can be written uniquely as an expression in the form $\sum_{k \in S} 2^k$ for some set of natural numbers $S \subseteq \NN,\; \max S < n$ for all $n \in \NN$.
+
+    \begin{itemize}
+
+        \item
+            When $n = 0$, the only $x \in \ZZ,\; 0 \leq x < 2^n = 1$ is $x = 0$, so $S = \emptyset$ is the only set that works.
+
+        \item
+            Suppose the statement holds for $n \in \NN$. Let $x \in \ZZ,\; 0 \leq x < 2^{n+1}$. Either $0 \leq x < 2^n$ or $2^n \leq x < 2^{n+1}$.
+
+            \begin{itemize}
+
+                \item
+                    If $0 \leq x < 2^n$, then by the inductive hypothesis $x$ can be written uniquely as an expression in the form $\sum_{k \in S} 2^k$ for some set of natural numbers $S \subseteq \NN,\; \max S < n < n + 1$. Also, $n$ cannot be included in the set because this would put the sum over $x$, so the expression is unique.
+
+                \item
+                    If $2^n \leq x < 2^{n+1}$, then $0 \leq x-2^n < 2^n$ so by the inductive hypothesis $x-2^n$ can be written in the form $\sum_{k \in S} 2^k$ for some set of natural numbers $S \subseteq \NN,\; \max S < n$, which means $x$ can be written as $\sum_{k \in S} 2^k + 2^n = \sum_{k \in S \cup \{n\}} 2^k$. Also, $n$ must be included in the set because otherwise the sum would remain below $x$, so the expression is unique.
+
+            \end{itemize}
+
+    \end{itemize}
+
+    Since every $x \in \ZZ\, 0 \leq x$ is less than $2^n$ for some $n \in \NN$, and adding higher powers of two will not produce more ways to express $x$, it follows that every nonnegative integer can be written uniquely as an expression in the form $\sum_{k \in S} 2^k$ for some finite set of natural numbers $S \subseteq \NN$.
+
+    Next is to prove by induction on $n \in \NN$ that every $x \in \ZZ,\; -2^n \leq x < 0$ can be written uniquely as an expression in the form $-1 - \sum_{k \in S} 2^k$ for some set of natural numbers $S \subseteq \NN,\; \max S < n$.
+
+    \begin{itemize}
+
+        \item
+            When $n = 0$, the only $x \in \ZZ,\; -2^0 = -1 \leq x < 0$ is $x = -1$, so $S = \emptyset$ is the only set that works.
+
+        \item
+            Suppose the statement holds for $n \in \NN$. Let $x \in \ZZ,\; -2^{n+1} \leq x < 0$. Either $2^{n+1} \leq x < -2^n$ or $-2^n \leq x < 0$.
+
+            \begin{itemize}
+
+                \item
+                    If $-2^n \leq x < 0$, then by the inductive hypothesis $x$ can be written uniquely as an expression in the form $-1 - \sum_{k \in S} 2^k$ for some set of natural numbers $S \subseteq \NN,\; \max S < n < n + 1$. Also, $n$ cannot be included in the set because this would put the sum under $x$, so the expression is unique.
+
+                \item
+                    If $-2^{n+1} \leq x < -2^n$, then $-2^n \leq x+2^n < 0$ so by the inductive hypothesis $x+2^n$ can be written in the form $-1 - \sum_{k \in S} 2^k$ for some set of natural numbers $S \subseteq \NN,\; \max S < n$, which means $x$ can be written as $-1 - \sum_{k \in S} 2^k - 2^n = -1 - \sum_{k \in S \cup \{n\}} 2^k$. Also, $n$ must be included in the set because otherwise the sum would remain above $x$, so the expression is unique.
+
+            \end{itemize}
+
+    \end{itemize}
+
+    Since every $x \in \ZZ\, x < 0$ is greater than $-2^n$ for some $n \in \NN$, and adding higher powers of two will not produce more ways to express $x$, it follows that every negative integer can be written uniquely as an expression in the form $-1 - \sum_{k \in S} 2^k$ for some finite set of natural numbers $S \subseteq \NN$.
+
+    The XOR operation can then be defined as follows:
+
+    For any two finite sets of natural numbers $S_1, S_2 \subseteq \NN$:
+
+    \begin{center}
+        $\left(\sum_{k \in S_1}2^k\right) \xor \left(\sum_{k \in S_1}2^k\right) = \left(\sum_{k \in S_1 \Delta S_2}2^k\right)$ \\
+        $\left(-1-\sum_{k \in S_1}2^k\right) \xor \left(\sum_{k \in S_1}2^k\right) = \left(-1-\sum_{k \in S_1 \Delta S_2}2^k\right)$ \\
+        $\left(\sum_{k \in S_1}2^k\right) \xor \left(-1-\sum_{k \in S_1}2^k\right) = \left(-1-\sum_{k \in S_1 \Delta S_2}2^k\right)$ \\
+        $\left(-1-\sum_{k \in S_1}2^k\right) \xor \left(-1-\sum_{k \in S_1}2^k\right) = \left(\sum_{k \in S_1 \Delta S_2}2^k\right)$
+    \end{center}
+
+    Where $S_1 \Delta S_2$ denotes the symmetric difference of $S_1$ and $S_2$. The axioms can be checked ``visually'' for the above definition.
+
+    Uniqueness:
+
+    Let $f, g: \ZZ \times \ZZ \longrightarrow \ZZ$ be two operations satisfying the axioms given for XOR. By the axioms, $(\ZZ, f, 0)$ and $(\ZZ, g, 0)$ are both Abelian groups. The statement that, for all $n \in \NN$, congruence $\pmod{2^n}$ respects $f$ and $g$ is equivalent to saying that $2^n \cdot \ZZ$ is a subgroup (with the congruence classes forming its cosets) in both of the groups $(\ZZ, f, 0)$ and $(\ZZ, g, 0)$, which is normal since both groups are Abelian, for all $n \in \NN$. Additionally, each subgroup in the sequence $\{ 2^n \cdot \ZZ \}_{n=0}^\infty$ is a subgroup of the previous one with an index of $[ 2^n \cdot \ZZ : 2^{n+1} \cdot \ZZ ] = 2$. Thus, for for both $(\ZZ, f, 0)$ and $(\ZZ, g, 0)$, the quotients of $\ZZ$ by each of these subgroups is uniquely determined by the previous via the induced isomorphism $\ZZ/(2^{n+1} \cdot \ZZ) \cong \ZZ_2 \times \ZZ/(2^n \cdot \ZZ)$, and the first one is just the trivial group $\ZZ/\ZZ$, so quotients $\ZZ/(2^n \cdot \ZZ)$ are identical  for all $n \in \NN$. As a result, for all $x, y \in \ZZ$, $f(x, y) \equiv g(x, y) \pmod{2^n}$, so $f(x, y) - g(x, y)$ divides $2^n$, for all $n \in \NN$. Zero is the only integer that can divide every power of two, so $f(x, y) - g(x, y) = 0$ which means $f(x, y) = g(x, y)$ for all $x, y \in \ZZ$.
+
+\end{Prf}
+
+\end{document}
